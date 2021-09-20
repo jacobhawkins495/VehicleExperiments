@@ -328,10 +328,11 @@ public class CarController : MonoBehaviour
             
             //Calculate engine temperature
             float maxTemp = radiator.GetMinTemperature() - (10 * (currentSpeed / transmission.topSpeeds[transmission.topSpeeds.Length - 1]));
+            radiatorTemp = maxTemp;
             
             if(engineTemperature < maxTemp)
             {
-                engineTemperature += 0.1f * (engineRPM / engine.maxRPM) * (1 - engineLoad);
+                engineTemperature += 0.2f * (engineRPM / engine.maxRPM) * (1 - engineLoad);
             }
             
             else
