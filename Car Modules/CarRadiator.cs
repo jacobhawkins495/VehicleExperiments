@@ -42,4 +42,16 @@ public class CarRadiator : FluidContainer
                 return 900.0f;
         }
     }
+    
+    public void Overheat()
+    {
+        if(currentLevel > 0.0f && !GetComponent<ParticleSystem>().isPlaying)
+            GetComponent<ParticleSystem>().Play();
+    }
+    
+    public void StopOverheating()
+    {
+        if(GetComponent<ParticleSystem>().isPlaying)
+            GetComponent<ParticleSystem>().Stop();
+    }
 }

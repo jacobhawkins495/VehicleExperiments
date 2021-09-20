@@ -366,13 +366,26 @@ public class CarController : MonoBehaviour
             float transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
 
             gearboxTorque = transmission.gearRatios[currentGear] * engineTorqueNM * engineLoad * transmissionSpeedCoefficient;
+            
+            //If engine is overheating, lose torque
+            if(engineTemperature > MAX_ENGINE_TEMP)
+            {
+                gearboxTorque *= Mathf.Max(0, (1 - ((engineTemperature - MAX_ENGINE_TEMP) / 10)));
+                
+                radiator.Overheat();
+            }
         }
         
         //Engine not running
         else
         {
             if(engineTemperature > ambientTemperature)
-                engineTemperature -= 0.1f * (engineTemperature / ambientTemperature);
+                engineTemperature -= 0.01f * (engineTemperature / ambientTemperature);
+        }
+        
+        if(engineTemperature < MAX_ENGINE_TEMPERATURE)
+        {
+            radiator.StopOverheating();
         }
 
         float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
