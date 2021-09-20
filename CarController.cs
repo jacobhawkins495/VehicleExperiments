@@ -122,6 +122,14 @@ public class CarController : MonoBehaviour
         }
     }
     
+    private bool CanEngineRun()
+    {
+        bool fuelCheck = gasTank.currentLevel > 0.0f && gasTank.containedFluid == FluidType.GAS;
+        bool engineCheck = engine.currentLevel > 0.0f && engine.containedFluid == FluidType.OIL;
+        
+        return fuelCheck && engineCheck;
+    }
+    
     public void Awake()
     {
         ApplyBrakes(1000.0f);
@@ -170,7 +178,7 @@ public class CarController : MonoBehaviour
             }
         }
         
-        if(!engineRunning && Input.GetButtonUp("Ignition") && gasTank.currentLevel > 0.0f && engine.currentLevel > 0.0f)
+        if(!engineRunning && Input.GetButtonUp("Ignition") && CanEngineRun())
         {
             engineRunning = true;
         }
@@ -216,6 +224,14 @@ public class CarController : MonoBehaviour
         
         forwardVector = this.transform.forward;
         prevPos = this.transform.position;
+        
+        //Shut off the engine if it runs out of oil or fuel
+        if(!CanEngineRun())
+        {
+            engineRPM = 0;
+            currentGear = CarTransmission.NEUTRAL;
+            engineRunning = false;
+        }
         
         if(engineRunning)
         {
@@ -351,5 +367,6 @@ public class CarController : MonoBehaviour
         //Update gauges
         tachometer.SetPercentage(engineRPM / tachometer.maxValue);
         speedometer.SetPercentage(currentSpeed / speedometer.maxValue);
+        gasometer.SetPercentage(gasTank.currentLevel / gasTank.capacity);
     }
 }

@@ -6,6 +6,8 @@ public class CarEngine : FluidContainer
 {
     public FluidType fuelToBurn = FluidType.GAS;
     
+    public float mileage;
+    
     //Engine torque in ft-lbs
     //Discretized as torque provided from 1200RPM to 4800RPM in increments of 400
     public float[] torqueOutput = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
