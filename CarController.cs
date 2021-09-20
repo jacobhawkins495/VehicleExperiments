@@ -234,11 +234,13 @@ public class CarController : MonoBehaviour
         prevSpeed = currentSpeed;
         currentSpeed = Mathf.Abs(dot * MPFS_TO_MPH);
         
+        //Distance traveled in miles
         float traveledDistance = currentSpeed / 60 / 60 / 50;
         
+        //Update odometer and gas tank and oil
         odometer += traveledDistance;
-        
         gasTank.RemoveFluid((traveledDistance / engine.mileage) * (engineRPM / engine.peakRPM));
+        engine.RemoveFluid((travelDistance / engine.oilMileage) * (engineRPM / engine.peakRPM));
         
         //Shut off the engine if it runs out of oil or fuel
         if(!CanEngineRun())

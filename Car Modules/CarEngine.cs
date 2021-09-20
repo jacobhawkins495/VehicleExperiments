@@ -6,7 +6,10 @@ public class CarEngine : FluidContainer
 {
     public FluidType fuelToBurn = FluidType.GAS;
     
-    public float mileage;
+    //Fluid consumption in miles per gallon
+    public float mileage, oilMileage;
+    
+    public int maxRPM, minRPM, peakRPM;
     
     //Engine torque in ft-lbs
     //Discretized as torque provided from 1200RPM to 4800RPM in increments of 400
@@ -14,8 +17,6 @@ public class CarEngine : FluidContainer
     
     //Engine torque in newton-meters. Calculated at start
     private float[] torqueOutputNm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    
-    public int maxRPM, minRPM, peakRPM;
     
     void Awake()
     {
