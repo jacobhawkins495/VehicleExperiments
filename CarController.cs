@@ -383,7 +383,7 @@ public class CarController : MonoBehaviour
                 engineTemperature -= 0.01f * (engineTemperature / ambientTemperature);
         }
         
-        if(engineTemperature < MAX_ENGINE_TEMPERATURE)
+        if(engineTemperature < MAX_ENGINE_TEMP)
         {
             radiator.StopOverheating();
         }
