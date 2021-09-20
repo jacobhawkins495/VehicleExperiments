@@ -153,6 +153,7 @@ public class CarController : MonoBehaviour
             currentGear = CarTransmission.FIRST;
         }
         
+        //Handbrake controls
         if(Input.GetButtonUp("Handbrake"))
         {
             if(handbrakeOn)
@@ -167,6 +168,18 @@ public class CarController : MonoBehaviour
                 handbrakeOn = true;
                 currentGear = CarTransmission.NEUTRAL;
             }
+        }
+        
+        if(!engineRunning && Input.GetButtonUp("Ignition") && gasTank.currentLevel > 0.0f && engine.currentLevel > 0.0f)
+        {
+            engineRunning = true;
+        }
+        
+        else if(engineRunning && Input.GetButtonUp("Ignition"))
+        {
+            engineRunning = false;
+            engineRPM = 0;
+            currentGear = CarTransmission.NEUTRAL;
         }
     }
      
@@ -324,7 +337,7 @@ public class CarController : MonoBehaviour
                     axleInfo.rightWheel.motorTorque = gearboxTorque;
                 }
 
-                else if(axleInfo.leftWheel.motorTorque != 0.00001f && axleInfo.rightWheel.motorTorque != 0.00001f && currentGear == CarTransmission.NEUTRAL)
+                else if(axleInfo.leftWheel.motorTorque != 0.00001f && axleInfo.rightWheel.motorTorque != 0.00001f && currentGear == CarTransmission.NEUTRAL && !engineRunning)
                 {
                     axleInfo.leftWheel.motorTorque = 0.00001f;
                     axleInfo.rightWheel.motorTorque = 0.00001f;
