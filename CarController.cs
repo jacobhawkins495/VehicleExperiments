@@ -39,6 +39,8 @@ public class CarController : MonoBehaviour
      */
     public int currentGear = CarTransmission.NEUTRAL;
     
+    public float odometer = 0.0f;
+    
     private Vector3 forwardVector, prevPos, curPos, movement;
     private float prevSpeed = 0.0f;
     
@@ -49,6 +51,9 @@ public class CarController : MonoBehaviour
     private bool reverseLightsOn = false;
     private bool handbrakeOn = true;
     private bool engineRunning = false;
+    
+    //Convert meters per 50th of a second to MPH
+    private const float MPFS_TO_MPH = 111.84681460272f;
      
     //Finds the corresponding visual wheel
     //Correctly applies the transform
@@ -225,6 +230,12 @@ public class CarController : MonoBehaviour
         forwardVector = this.transform.forward;
         prevPos = this.transform.position;
         
+        //Stupid way to get the car's forward speed in miles per hour
+        prevSpeed = currentSpeed;
+        currentSpeed = Mathf.Abs(dot * MPFS_TO_MPH);
+        
+        odometer += currentSpeed / 60 / 60 / 50;
+        
         //Shut off the engine if it runs out of oil or fuel
         if(!CanEngineRun())
         {
@@ -288,10 +299,6 @@ public class CarController : MonoBehaviour
 
             //Engine load coefficient. Currently just based on the x angle of the car
             engineLoad = 1 - Mathf.Min(30, (transform.eulerAngles.x > 180 ? 360 - transform.eulerAngles.x : transform.eulerAngles.x)) / 30;
-
-            //Stupid way to get the car's forward speed in miles per hour
-            prevSpeed = currentSpeed;
-            currentSpeed = Mathf.Abs(dot * 112.4f);
 
             if(engineRPM < targetRPM)
             {
