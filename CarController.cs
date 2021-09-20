@@ -18,6 +18,7 @@ public class CarController : MonoBehaviour
     public CarEngine engine;
     public CarTransmission transmission;
     public FluidContainer gasTank;
+    public CarRadiator radiator;
     public CarGauge speedometer, tachometer, gasometer, thermometer;
     
     public Transform centerOfMass;
@@ -31,6 +32,10 @@ public class CarController : MonoBehaviour
     
     public float engineLoad = 0.0f;
     public float currentSpeed = 0.0f;
+    public float engineTemperature = 90.0f;
+    
+    public float ambientTemperature = 90.0f;
+    public float radiatorTemp;
     
     /* Current transmission gear
      *  0  Reverse
@@ -54,6 +59,7 @@ public class CarController : MonoBehaviour
     
     //Convert meters per 50th of a second to MPH
     private const float MPFS_TO_MPH = 111.84681460272f;
+    private const float MAX_ENGINE_TEMP = 230.0f;
      
     //Finds the corresponding visual wheel
     //Correctly applies the transform
@@ -240,7 +246,7 @@ public class CarController : MonoBehaviour
         //Update odometer and gas tank and oil
         odometer += traveledDistance;
         gasTank.RemoveFluid((traveledDistance / engine.mileage) * (engineRPM / engine.peakRPM));
-        engine.RemoveFluid((travelDistance / engine.oilMileage) * (engineRPM / engine.peakRPM));
+        engine.RemoveFluid((traveledDistance / engine.oilMileage) * (engineRPM / engine.peakRPM));
         
         //Shut off the engine if it runs out of oil or fuel
         if(!CanEngineRun())
@@ -319,6 +325,19 @@ public class CarController : MonoBehaviour
             {
                 engineRPM -= 65;
             }
+            
+            //Calculate engine temperature
+            float maxTemp = radiator.GetMinTemperature() - (10 * (currentSpeed / transmission.topSpeeds[transmission.topSpeeds.Length - 1]));
+            
+            if(engineTemperature < maxTemp)
+            {
+                engineTemperature += 0.1f * (engineRPM / engine.maxRPM) * (1 - engineLoad);
+            }
+            
+            else
+            {
+                engineTemperature -= 0.1f;
+            }
 
             //Shift up
             if(engineRPM > engine.peakRPM && currentGear < transmission.topGear && currentGear > CarTransmission.NEUTRAL && currentSpeed > transmission.topSpeeds[currentGear] * 0.8f && currentSpeed > prevSpeed)
@@ -345,6 +364,13 @@ public class CarController : MonoBehaviour
             float transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
 
             gearboxTorque = transmission.gearRatios[currentGear] * engineTorqueNM * engineLoad * transmissionSpeedCoefficient;
+        }
+        
+        //Engine not running
+        else
+        {
+            if(engineTemperature > ambientTemperature)
+                engineTemperature -= 0.1f * (engineTemperature / ambientTemperature);
         }
 
         float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
@@ -381,5 +407,6 @@ public class CarController : MonoBehaviour
         tachometer.SetPercentage(engineRPM / tachometer.maxValue);
         speedometer.SetPercentage(currentSpeed / speedometer.maxValue);
         gasometer.SetPercentage(gasTank.currentLevel / gasTank.capacity);
+        thermometer.SetPercentage(engineTemperature / thermometer.maxValue);
     }
 }
