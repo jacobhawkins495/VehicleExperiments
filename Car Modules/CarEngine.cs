@@ -7,7 +7,7 @@ public class CarEngine : FluidContainer
     public FluidType fuelToBurn = FluidType.GAS;
     
     //Fluid consumption in miles per gallon
-    public float mileage, oilMileage;
+    public float mileage, oilMileage, coolantMileage;
     
     public int maxRPM, minRPM, peakRPM;
     

@@ -246,7 +246,8 @@ public class CarController : MonoBehaviour
         //Update odometer and gas tank and oil
         odometer += traveledDistance;
         gasTank.RemoveFluid((traveledDistance / engine.mileage) * (engineRPM / engine.peakRPM));
-        engine.RemoveFluid((traveledDistance / engine.oilMileage) * (engineRPM / engine.peakRPM));
+        engine.RemoveFluid((traveledDistance / engine.oilMileage) * (engineRPM / engine.maxRPM));
+        radiator.RemoveFluid((traveledDistance / engine.coolantMileage) * (engineRPM / engine.maxRPM));
         
         //Shut off the engine if it runs out of oil or fuel
         if(!CanEngineRun())

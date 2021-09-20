@@ -5,7 +5,8 @@ using UnityEngine;
 public class CarRadiator : FluidContainer
 {
     //Engine operating temperature in fahrenheit
-    public float topTemperature = 230;
+    private float topTemperature = 225;
+    
     private const float TEMP_ADJUST = 0.25f;
     
     //Thermal conductivity of gasoline and oil (0.15), relative to water (0.606)
