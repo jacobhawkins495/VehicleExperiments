@@ -27,6 +27,7 @@ public class CarController : MonoBehaviour
     public float maxSteeringAngle;
     
     public float engineRPM = 0.0f;
+    public float trueEngineRPM = 0.0f;
     public float engineTorque = 0.0f;
     public float gearboxTorque = 0.0f;
     
@@ -35,7 +36,6 @@ public class CarController : MonoBehaviour
     public float engineTemperature = 90.0f;
     
     public float ambientTemperature = 90.0f;
-    public float radiatorTemp;
     
     /* Current transmission gear
      *  0  Reverse
@@ -329,7 +329,6 @@ public class CarController : MonoBehaviour
             
             //Calculate engine temperature
             float maxTemp = radiator.GetMinTemperature() - (10 * (currentSpeed / transmission.topSpeeds[transmission.topSpeeds.Length - 1]));
-            radiatorTemp = maxTemp;
             
             if(engineTemperature < maxTemp)
             {
@@ -354,14 +353,23 @@ public class CarController : MonoBehaviour
                 engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear]);
                 currentGear--;
             }
+            
+            //If the RPM drops too hard, the engine stalls
+            if(engineTemperature > MAX_ENGINE_TEMP && engineRPM < engine.minRPM)
+            {
+                engineRunning = false;
+            }
 
             //Reverse
             if(currentGear == CarTransmission.FIRST && movingForward && Input.GetAxis("Vertical") < 0.0f)
                 currentGear = CarTransmission.REVERSE;
+                
+            //Engine RPM affected by overheating
+            trueEngineRPM = engineRPM * Mathf.Clamp(1.0f - ((engineTemperature - MAX_ENGINE_TEMP) / 10.0f), 0.0f, 1.0f);
 
-            engineTorque = engine.GetTorque(engineRPM);
+            engineTorque = engine.GetTorque(trueEngineRPM);
 
-            float engineTorqueNM = engine.GetTorque(engineRPM) / 0.73756f;
+            float engineTorqueNM = engineTorque / 0.73756f;
             float topSpeedCoefficient = 1.5f - (currentGear == CarTransmission.REVERSE ? (currentSpeed / transmission.topSpeeds[CarTransmission.REVERSE]) : (currentSpeed / transmission.topSpeeds[transmission.topGear]));
             float transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
 
@@ -369,9 +377,7 @@ public class CarController : MonoBehaviour
             
             //If engine is overheating, lose torque
             if(engineTemperature > MAX_ENGINE_TEMP)
-            {
-                gearboxTorque *= Mathf.Max(0, (1 - ((engineTemperature - MAX_ENGINE_TEMP) / 10)));
-                
+            { 
                 radiator.Overheat();
             }
         }
@@ -381,6 +387,9 @@ public class CarController : MonoBehaviour
         {
             if(engineTemperature > ambientTemperature)
                 engineTemperature -= 0.01f * (engineTemperature / ambientTemperature);
+                
+            if(engineRPM > 0)
+                engineRPM -= 65;
         }
         
         if(engineTemperature < MAX_ENGINE_TEMP)
@@ -419,7 +428,7 @@ public class CarController : MonoBehaviour
         }
         
         //Update gauges
-        tachometer.SetPercentage(engineRPM / tachometer.maxValue);
+        tachometer.SetPercentage(trueEngineRPM / tachometer.maxValue);
         speedometer.SetPercentage(currentSpeed / speedometer.maxValue);
         gasometer.SetPercentage(gasTank.currentLevel / gasTank.capacity);
         thermometer.SetPercentage(engineTemperature / thermometer.maxValue);
