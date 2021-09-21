@@ -89,22 +89,42 @@ public class CarController : MonoBehaviour
             if(highbeamsOn)
             {
                 lightsOn = highbeamsOn = false;
-                leftHeadlight.Deactivate();
-                rightHeadlight.Deactivate();
-                leftTaillight.DeactivatePrimary();
-                rightTaillight.DeactivatePrimary();
-                speedometer.DeactivateBacklight();
-                tachometer.DeactivateBacklight();
-                gasometer.DeactivateBacklight();
-                thermometer.DeactivateBacklight();
+                
+                if(leftHeadlight != null)
+                    leftHeadlight.Deactivate();
+                    
+                if(rightHeadlight != null)
+                    rightHeadlight.Deactivate();
+                    
+                if(leftTaillight != null)
+                    leftTaillight.DeactivatePrimary();
+                    
+                if(rightTaillight != null)
+                    rightTaillight.DeactivatePrimary();
+                    
+                if(speedometer != null)
+                    speedometer.DeactivateBacklight();
+                    
+                if(tachometer != null)
+                    tachometer.DeactivateBacklight();
+                    
+                if(gasometer != null)
+                    gasometer.DeactivateBacklight();
+                    
+                if(thermometer != null)
+                    thermometer.DeactivateBacklight();
             }
 
             //If the lights are on but the highbeams are not, turn on the highbeams
             else
             {
                 highbeamsOn = true;
-                leftHeadlight.ActivateSecondary();
-                rightHeadlight.ActivateSecondary();
+                
+                if(leftHeadlight != null)
+                    leftHeadlight.ActivateSecondary();
+                    
+                if(rightHeadlight != null)
+                    rightHeadlight.ActivateSecondary();
             }
         }
 
@@ -112,14 +132,30 @@ public class CarController : MonoBehaviour
         else
         {
             lightsOn = true;
-            leftHeadlight.ActivatePrimary();
-            rightHeadlight.ActivatePrimary();
-            leftTaillight.ActivatePrimary();
-            rightTaillight.ActivatePrimary();
-            speedometer.ActivateBacklight();
-            tachometer.ActivateBacklight();
-            gasometer.ActivateBacklight();
-            thermometer.ActivateBacklight();
+            
+            if(leftHeadlight != null)
+                leftHeadlight.ActivatePrimary();
+                
+            if(rightHeadlight != null)
+                rightHeadlight.ActivatePrimary();
+                
+            if(leftTaillight != null)
+                leftTaillight.ActivatePrimary();
+                
+            if(rightTaillight != null)
+                rightTaillight.ActivatePrimary();
+            
+            if(speedometer != null)
+                speedometer.ActivateBacklight();
+                
+            if(tachometer != null)
+                tachometer.ActivateBacklight();
+                
+            if(gasometer != null)
+                gasometer.ActivateBacklight();
+                
+            if(thermometer != null)
+                thermometer.ActivateBacklight();
         }
     }
     
@@ -161,8 +197,13 @@ public class CarController : MonoBehaviour
         if(Input.GetAxis("Vertical") < 0 && movingBackward && !reverseLightsOn)
         {
             reverseLightsOn = true;
-            leftTaillight.ActivateSecondary();
-            rightTaillight.ActivateSecondary();
+            
+            if(leftTaillight != null)
+                leftTaillight.ActivateSecondary();
+                
+            if(rightTaillight != null)
+                rightTaillight.ActivateSecondary();
+                
             currentGear = CarTransmission.REVERSE;
         }
         
@@ -170,8 +211,13 @@ public class CarController : MonoBehaviour
         else if(reverseLightsOn && Input.GetAxis("Vertical") > 0)
         {
             reverseLightsOn = false;
-            leftTaillight.DeactivateSecondary();
-            rightTaillight.DeactivateSecondary();
+            
+            if(leftTaillight != null)
+                leftTaillight.DeactivateSecondary();
+                
+            if(rightTaillight != null)
+                rightTaillight.DeactivateSecondary();
+                
             currentGear = CarTransmission.FIRST;
         }
         
@@ -247,7 +293,8 @@ public class CarController : MonoBehaviour
         float traveledDistance = currentSpeed / 60 / 60 / 50;
         
         //Update odometer and gas tank and oil
-        odometer.AddMiles(traveledDistance);
+        if(odometer != null)
+            odometer.AddMiles(traveledDistance);
         
         if(engine != null && radiator != null)
         {
@@ -274,15 +321,23 @@ public class CarController : MonoBehaviour
                     if(movingBackward)
                     {
                         ApplyBrakes(1000.0f * Input.GetAxis("Vertical"));
-                        leftTaillight.ActivateTertiary();
-                        rightTaillight.ActivateTertiary();
+                        
+                        if(leftTaillight != null)
+                            leftTaillight.ActivateTertiary();
+                            
+                        if(rightTaillight != null)
+                            rightTaillight.ActivateTertiary();
                     }
 
                     else
                     {
                         ApplyBrakes(0.0f);
-                        leftTaillight.DeactivateTertiary();
-                        rightTaillight.DeactivateTertiary();
+                        
+                        if(leftTaillight != null)
+                            leftTaillight.DeactivateTertiary();
+                            
+                        if(rightTaillight != null)
+                            rightTaillight.DeactivateTertiary();
                     }
                 }
 
@@ -291,15 +346,24 @@ public class CarController : MonoBehaviour
                     if(movingForward)
                     {
                         ApplyBrakes(1000.0f * -Input.GetAxis("Vertical"));
-                        leftTaillight.ActivateTertiary();
-                        rightTaillight.ActivateTertiary();
+                        
+                        if(leftTaillight != null)
+                            leftTaillight.ActivateTertiary();
+                            
+                        if(rightTaillight != null)
+                            rightTaillight.ActivateTertiary();
                     }
 
                     else
                     {
                         ApplyBrakes(0.0f);
-                        leftTaillight.DeactivateTertiary();
-                        rightTaillight.DeactivateTertiary();    
+                        
+                        if(leftTaillight != null)
+                            leftTaillight.DeactivateTertiary();
+                            
+                        if(rightTaillight != null)
+                            rightTaillight.DeactivateTertiary();   
+                            
                         currentGear = CarTransmission.REVERSE;
                     }   
                 }
@@ -378,7 +442,7 @@ public class CarController : MonoBehaviour
             trueEngineRPM = engineRPM * Mathf.Clamp(1.0f - ((engineTemperature - MAX_ENGINE_TEMP) / 10.0f), 0.0f, 1.0f);
             
             //If the RPM drops too hard, the engine stalls
-            if(engineTemperature > MAX_ENGINE_TEMP && trueEngineRPM < engine.minRPM)
+            if(engine != null && engineTemperature > MAX_ENGINE_TEMP && trueEngineRPM < engine.minRPM)
             {
                 engineRunning = false;
                 engineRPM = 0.0f;
@@ -391,7 +455,7 @@ public class CarController : MonoBehaviour
             float topSpeedCoefficient = 0.0f; 
             float transmissionSpeedCoefficient = 0.0f;
             
-            if(transmission != null)
+            if(engine != null && transmission != null)
             {
                 topSpeedCoefficient = 1.5f - (currentGear == CarTransmission.REVERSE ? (currentSpeed / transmission.topSpeeds[CarTransmission.REVERSE]) : (currentSpeed / transmission.topSpeeds[transmission.topGear]));
                 transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
@@ -453,8 +517,9 @@ public class CarController : MonoBehaviour
                     axleInfo.rightWheel.motorTorque = gearboxTorque;
                 }
 
-                else if(axleInfo.leftWheel.motorTorque != 0.00001f && axleInfo.rightWheel.motorTorque != 0.00001f && currentGear == CarTransmission.NEUTRAL && !engineRunning)
+                else if(axleInfo.leftWheel.motorTorque != 0.00001f && axleInfo.rightWheel.motorTorque != 0.00001f && currentGear == CarTransmission.NEUTRAL)
                 {
+                    //For some reason the car won't roll downhill if wheel torque is set to 0, so it must be set to a nonzero value
                     axleInfo.leftWheel.motorTorque = 0.00001f;
                     axleInfo.rightWheel.motorTorque = 0.00001f;
                 }
@@ -465,9 +530,16 @@ public class CarController : MonoBehaviour
         }
         
         //Update gauges
-        tachometer.SetPercentage(trueEngineRPM / tachometer.maxValue);
-        speedometer.SetPercentage(currentSpeed / speedometer.maxValue);
-        gasometer.SetPercentage(gasTank.currentLevel / gasTank.capacity);
-        thermometer.SetPercentage(engineTemperature / thermometer.maxValue);
+        if(tachometer != null)
+            tachometer.SetPercentage(trueEngineRPM / tachometer.maxValue);
+            
+        if(speedometer != null)
+            speedometer.SetPercentage(currentSpeed / speedometer.maxValue);
+            
+        if(gasometer != null)
+            gasometer.SetPercentage(gasTank.currentLevel / gasTank.capacity);
+            
+        if(thermometer != null)
+            thermometer.SetPercentage(engineTemperature / thermometer.maxValue);
     }
 }
