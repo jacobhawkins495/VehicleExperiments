@@ -20,6 +20,7 @@ public class CarController : MonoBehaviour
     public FluidContainer gasTank;
     public CarRadiator radiator;
     public CarGauge speedometer, tachometer, gasometer, thermometer;
+    public CarOdometer odometer;
     
     public Transform centerOfMass;
 
@@ -43,8 +44,6 @@ public class CarController : MonoBehaviour
      *  2+ Drive
      */
     public int currentGear = CarTransmission.NEUTRAL;
-    
-    public float odometer = 0.0f;
     
     private Vector3 forwardVector, prevPos, curPos, movement;
     private float prevSpeed = 0.0f;
@@ -248,7 +247,7 @@ public class CarController : MonoBehaviour
         float traveledDistance = currentSpeed / 60 / 60 / 50;
         
         //Update odometer and gas tank and oil
-        odometer += traveledDistance;
+        odometer.AddMiles(traveledDistance);
         
         if(engine != null && radiator != null)
         {
