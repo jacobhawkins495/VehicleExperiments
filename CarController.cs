@@ -353,6 +353,7 @@ public class CarController : MonoBehaviour
             
             else
             {
+                //Engine cools down to below the radiator's max temperature
                 engineTemperature -= 0.1f;
             }
 
