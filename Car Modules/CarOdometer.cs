@@ -83,6 +83,7 @@ public class CarOdometer : MonoBehaviour
     {
         int milesInt = (int)miles;
         
+        //Separate each digit from the float
         float decimalPart = (float)(miles - (int)miles);
         int firstDigitInt = milesInt % 10;
         int secondDigitInt = (milesInt / 10) % 10;
@@ -91,6 +92,7 @@ public class CarOdometer : MonoBehaviour
         int fifthDigitInt = (milesInt / 10000) % 10;
         int sixthDigitInt = (milesInt / 100000) % 10;
         
+        //Calculate how much further it would be rotated relative to the digit to the right of it
         float firstDigit = firstDigitInt + decimalPart;
         float secondDigit = secondDigitInt + (firstDigit / 10.0f);
         float thirdDigit = thirdDigitInt + (secondDigit / 10.0f);
@@ -98,8 +100,7 @@ public class CarOdometer : MonoBehaviour
         float fifthDigit = fifthDigitInt + (fourthDigit / 10.0f);
         float sixthDigit = sixthDigitInt + (fifthDigit / 10.0f);
         
-        Debug.Log(sixthDigit + " " + fifthDigit + " " + fourthDigit + " " + thirdDigit + " " + secondDigit + " " + firstDigit + " " + decimalPart);
-        
+        //Update the rotations
         display[6].localRotation = Quaternion.Euler(ZERO + (18.0f * (decimalPart * 10.0f)), 0.0f, 90.0f);
         display[5].localRotation = Quaternion.Euler(ZERO + (18.0f * firstDigit), 0.0f, 90.0f);
         display[4].localRotation = Quaternion.Euler(ZERO + (18.0f * secondDigit), 0.0f, 90.0f);
