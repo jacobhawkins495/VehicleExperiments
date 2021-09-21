@@ -60,6 +60,7 @@ public class CarController : MonoBehaviour
     //Convert meters per 50th of a second to MPH
     private const float MPFS_TO_MPH = 111.84681460272f;
     private const float MAX_ENGINE_TEMP = 230.0f;
+    private const float MIN_ENGINE_OVERHEAT = 200.0f;
      
     //Finds the corresponding visual wheel
     //Correctly applies the transform
@@ -135,6 +136,9 @@ public class CarController : MonoBehaviour
     
     private bool CanEngineRun()
     {
+        if(engine == null)
+            return false;
+            
         bool fuelCheck = gasTank.currentLevel > 0.0f && gasTank.containedFluid == FluidType.GAS;
         bool engineCheck = engine.currentLevel > 0.0f && engine.containedFluid == FluidType.OIL;
         
@@ -245,9 +249,13 @@ public class CarController : MonoBehaviour
         
         //Update odometer and gas tank and oil
         odometer += traveledDistance;
-        gasTank.RemoveFluid((traveledDistance / engine.mileage) * (engineRPM / engine.peakRPM));
-        engine.RemoveFluid((traveledDistance / engine.oilMileage) * (engineRPM / engine.maxRPM));
-        radiator.RemoveFluid((traveledDistance / engine.coolantMileage) * (engineRPM / engine.maxRPM));
+        
+        if(engine != null && radiator != null)
+        {
+            gasTank.RemoveFluid((traveledDistance / engine.mileage) * (engineRPM / engine.peakRPM));
+            engine.RemoveFluid((traveledDistance / engine.oilMileage) * (engineRPM / engine.maxRPM));
+            radiator.RemoveFluid((traveledDistance / engine.coolantMileage) * (engineRPM / engine.maxRPM));
+        }
         
         //Shut off the engine if it runs out of oil or fuel
         if(!CanEngineRun())
@@ -299,7 +307,7 @@ public class CarController : MonoBehaviour
             }
 
             //Shifting out of neutral
-            if(currentGear == CarTransmission.NEUTRAL && Input.GetAxis("Vertical") != 0.0f)
+            if(transmission != null && currentGear == CarTransmission.NEUTRAL && Input.GetAxis("Vertical") != 0.0f)
             {
                 if(Input.GetAxis("Vertical") > 0.0f)
                     currentGear = CarTransmission.FIRST;
@@ -328,7 +336,10 @@ public class CarController : MonoBehaviour
             }
             
             //Calculate engine temperature
-            float maxTemp = radiator.GetMinTemperature() - (10 * (currentSpeed / transmission.topSpeeds[transmission.topSpeeds.Length - 1]));
+            float maxTemp = 1000.0f;
+            
+            if(transmission != null)
+                maxTemp = radiator.GetMinTemperature() - (10 * (currentSpeed / transmission.topSpeeds[transmission.topSpeeds.Length - 1]));
             
             if(engineTemperature < maxTemp)
             {
@@ -341,23 +352,17 @@ public class CarController : MonoBehaviour
             }
 
             //Shift up
-            if(engineRPM > engine.peakRPM && currentGear < transmission.topGear && currentGear > CarTransmission.NEUTRAL && currentSpeed > transmission.topSpeeds[currentGear] * 0.8f && currentSpeed > prevSpeed)
+            if(transmission != null && engineRPM > engine.peakRPM && currentGear < transmission.topGear && currentGear > CarTransmission.NEUTRAL && currentSpeed > transmission.topSpeeds[currentGear] * 0.8f && currentSpeed > prevSpeed)
             {
                 engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear + 1]);
                 currentGear++;
             }
 
             //Shift down
-            if(currentGear > CarTransmission.FIRST && currentSpeed < transmission.topSpeeds[currentGear] * 0.6f && currentSpeed < prevSpeed)
+            if(transmission != null && currentGear > CarTransmission.FIRST && currentSpeed < transmission.topSpeeds[currentGear] * 0.6f && currentSpeed < prevSpeed)
             {
                 engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear]);
                 currentGear--;
-            }
-            
-            //If the RPM drops too hard, the engine stalls
-            if(engineTemperature > MAX_ENGINE_TEMP && engineRPM < engine.minRPM)
-            {
-                engineRunning = false;
             }
 
             //Reverse
@@ -366,16 +371,30 @@ public class CarController : MonoBehaviour
                 
             //Engine RPM affected by overheating
             trueEngineRPM = engineRPM * Mathf.Clamp(1.0f - ((engineTemperature - MAX_ENGINE_TEMP) / 10.0f), 0.0f, 1.0f);
+            
+            //If the RPM drops too hard, the engine stalls
+            if(engineTemperature > MAX_ENGINE_TEMP && trueEngineRPM < engine.minRPM)
+            {
+                engineRunning = false;
+                engineRPM = 0.0f;
+                Debug.Log("Engine overheated too much");
+            }
 
             engineTorque = engine.GetTorque(trueEngineRPM);
 
             float engineTorqueNM = engineTorque / 0.73756f;
-            float topSpeedCoefficient = 1.5f - (currentGear == CarTransmission.REVERSE ? (currentSpeed / transmission.topSpeeds[CarTransmission.REVERSE]) : (currentSpeed / transmission.topSpeeds[transmission.topGear]));
-            float transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
-
-            gearboxTorque = transmission.gearRatios[currentGear] * engineTorqueNM * engineLoad * transmissionSpeedCoefficient;
+            float topSpeedCoefficient = 0.0f; 
+            float transmissionSpeedCoefficient = 0.0f;
             
-            //If engine is overheating, lose torque
+            if(transmission != null)
+            {
+                topSpeedCoefficient = 1.5f - (currentGear == CarTransmission.REVERSE ? (currentSpeed / transmission.topSpeeds[CarTransmission.REVERSE]) : (currentSpeed / transmission.topSpeeds[transmission.topGear]));
+                transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
+
+                gearboxTorque = transmission.gearRatios[currentGear] * engineTorqueNM * engineLoad * transmissionSpeedCoefficient;
+            }
+            
+            //If engine is overheating, produce steam
             if(engineTemperature > MAX_ENGINE_TEMP)
             { 
                 radiator.Overheat();
@@ -388,11 +407,24 @@ public class CarController : MonoBehaviour
             if(engineTemperature > ambientTemperature)
                 engineTemperature -= 0.01f * (engineTemperature / ambientTemperature);
                 
-            if(engineRPM > 0)
-                engineRPM -= 65;
+            if(trueEngineRPM > 0)
+            {
+                trueEngineRPM -= 65;
+            }
         }
         
-        if(engineTemperature < MAX_ENGINE_TEMP)
+        if(engineTemperature > MAX_ENGINE_TEMP && engineRunning)
+        {
+            radiator.SetPercent(Mathf.Clamp((engineTemperature - MAX_ENGINE_TEMP) / 10.0f, 0.0f, 1.0f));
+        }
+        
+        else if(engineTemperature > MIN_ENGINE_OVERHEAT)
+        {
+            radiator.SetPercent(Mathf.Clamp((engineTemperature - MIN_ENGINE_OVERHEAT) / 40.0f, 0.0f, 1.0f));
+        }
+        
+        //Stop producing steam after a while
+        if(engineTemperature < MIN_ENGINE_OVERHEAT)
         {
             radiator.StopOverheating();
         }

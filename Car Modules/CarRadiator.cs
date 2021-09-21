@@ -6,8 +6,10 @@ public class CarRadiator : FluidContainer
 {
     //Engine operating temperature in fahrenheit
     private float topTemperature = 225;
+    private float particleRate;
     
     private const float TEMP_ADJUST = 0.25f;
+    
     
     //Thermal conductivity of gasoline and oil (0.15), relative to water (0.606)
     private const float HYDROCARBON_THERMAL_CONDUCTIVITY = 0.248f;
@@ -17,6 +19,10 @@ public class CarRadiator : FluidContainer
     {
         Transform child = transform.GetChild(0);
         topTemperature -= 300 * child.lossyScale.x * child.lossyScale.y * child.lossyScale.z;
+        
+        ParticleSystem.EmissionModule em = GetComponent<ParticleSystem>().emission;
+        
+        particleRate = em.rateOverTime.constant;
     }
     
     /* Returns the minimum temperature this radiator can cool to
@@ -43,10 +49,18 @@ public class CarRadiator : FluidContainer
         }
     }
     
+    public void SetPercent(float percent)
+    {
+        ParticleSystem.EmissionModule em = GetComponent<ParticleSystem>().emission;
+        em.rateOverTime = particleRate * percent;
+    }
+    
     public void Overheat()
     {
         if(currentLevel > 0.0f && !GetComponent<ParticleSystem>().isPlaying)
+        {
             GetComponent<ParticleSystem>().Play();
+        }
     }
     
     public void StopOverheating()
