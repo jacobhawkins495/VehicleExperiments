@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CarOdometer : MonoBehaviour
 {
-    public float miles = 0.0f;
+    public double miles = 0.0f;
     
     private Transform[] display;
     
@@ -68,7 +68,7 @@ public class CarOdometer : MonoBehaviour
         UpdateDisplay();
     }
     
-    public float GetMiles()
+    public double GetMiles()
     {
         return miles;
     }
@@ -81,14 +81,24 @@ public class CarOdometer : MonoBehaviour
     
     private void UpdateDisplay()
     {
-        float decimalPart = miles - (int)miles;
-        float firstDigit = miles - ((int)miles / 10 * 10);
-        float secondDigit = miles - ((int)miles / 100 * 100) - 10;
-        Debug.Log(secondDigit);
-        float thirdDigit = 0.0f;
-        float fourthDigit = 0.0f;
-        float fifthDigit = 0.0f;
-        float sixthDigit = 0.0f;
+        int milesInt = (int)miles;
+        
+        float decimalPart = (float)(miles - (int)miles);
+        int firstDigitInt = milesInt % 10;
+        int secondDigitInt = (milesInt / 10) % 10;
+        int thirdDigitInt = (milesInt / 100) % 10;
+        int fourthDigitInt = (milesInt / 1000) % 10;
+        int fifthDigitInt = (milesInt / 10000) % 10;
+        int sixthDigitInt = (milesInt / 100000) % 10;
+        
+        float firstDigit = firstDigitInt + decimalPart;
+        float secondDigit = secondDigitInt + (firstDigit / 10.0f);
+        float thirdDigit = thirdDigitInt + (secondDigit / 10.0f);
+        float fourthDigit = fourthDigitInt + (thirdDigit / 10.0f);
+        float fifthDigit = fifthDigitInt + (fourthDigit / 10.0f);
+        float sixthDigit = sixthDigitInt + (fifthDigit / 10.0f);
+        
+        Debug.Log(sixthDigit + " " + fifthDigit + " " + fourthDigit + " " + thirdDigit + " " + secondDigit + " " + firstDigit + " " + decimalPart);
         
         display[6].localRotation = Quaternion.Euler(ZERO + (18.0f * (decimalPart * 10.0f)), 0.0f, 90.0f);
         display[5].localRotation = Quaternion.Euler(ZERO + (18.0f * firstDigit), 0.0f, 90.0f);
