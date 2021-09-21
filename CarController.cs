@@ -461,7 +461,7 @@ public class CarController : MonoBehaviour
             if(engine != null && transmission != null)
             {
                 topSpeedCoefficient = 1.5f - (currentGear == CarTransmission.REVERSE ? (currentSpeed / transmission.topSpeeds[CarTransmission.REVERSE]) : (currentSpeed / transmission.topSpeeds[transmission.topGear]));
-                transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 1.5f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
+                transmissionSpeedCoefficient = (currentGear == 1 ? 0 : (((topSpeedCoefficient * 2.2f) - (currentSpeed / transmission.topSpeeds[currentGear]))) * (engineRPM / engine.maxRPM));
 
                 gearboxTorque = transmission.gearRatios[currentGear] * engineTorqueNM * engineLoad * transmissionSpeedCoefficient;
             }
@@ -520,10 +520,10 @@ public class CarController : MonoBehaviour
                 if(currentGear != CarTransmission.NEUTRAL)
                 {
                     if(axleInfo.leftWheel != null)
-                        axleInfo.leftWheel.motorTorque = gearboxTorque;
+                        axleInfo.leftWheel.motorTorque = gearboxTorque / 2.0f;
                         
                     if(axleInfo.rightWheel != null)
-                        axleInfo.rightWheel.motorTorque = gearboxTorque;
+                        axleInfo.rightWheel.motorTorque = gearboxTorque / 2.0f;
                 }
 
                 else if(currentGear == CarTransmission.NEUTRAL)
