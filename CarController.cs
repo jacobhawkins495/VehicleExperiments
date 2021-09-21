@@ -65,7 +65,7 @@ public class CarController : MonoBehaviour
     //Correctly applies the transform
     public void ApplyLocalPositionToVisuals(WheelCollider collider)
     {
-        if (collider.transform.childCount == 0) 
+        if (collider == null || collider.transform.childCount == 0) 
         {
             return;
         }
@@ -164,8 +164,11 @@ public class CarController : MonoBehaviour
     {
         foreach(AxleInfo axle in axleInfos)
         {
-            axle.leftWheel.brakeTorque = strength;
-            axle.rightWheel.brakeTorque = strength;
+            if(axle.leftWheel != null)
+                axle.leftWheel.brakeTorque = strength;
+                
+            if(axle.rightWheel != null)
+                axle.rightWheel.brakeTorque = strength;
         }
     }
     
@@ -505,23 +508,32 @@ public class CarController : MonoBehaviour
         {
             if (axleInfo.steering)
             {
-                axleInfo.leftWheel.steerAngle = steering;
-                axleInfo.rightWheel.steerAngle = steering;
+                if(axleInfo.leftWheel != null)
+                    axleInfo.leftWheel.steerAngle = steering;
+                    
+                if(axleInfo.rightWheel != null)
+                    axleInfo.rightWheel.steerAngle = steering;
             }
 
             if (axleInfo.motor) 
             {
                 if(currentGear != CarTransmission.NEUTRAL)
                 {
-                    axleInfo.leftWheel.motorTorque = gearboxTorque;
-                    axleInfo.rightWheel.motorTorque = gearboxTorque;
+                    if(axleInfo.leftWheel != null)
+                        axleInfo.leftWheel.motorTorque = gearboxTorque;
+                        
+                    if(axleInfo.rightWheel != null)
+                        axleInfo.rightWheel.motorTorque = gearboxTorque;
                 }
 
-                else if(axleInfo.leftWheel.motorTorque != 0.00001f && axleInfo.rightWheel.motorTorque != 0.00001f && currentGear == CarTransmission.NEUTRAL)
+                else if(currentGear == CarTransmission.NEUTRAL)
                 {
                     //For some reason the car won't roll downhill if wheel torque is set to 0, so it must be set to a nonzero value
-                    axleInfo.leftWheel.motorTorque = 0.00001f;
-                    axleInfo.rightWheel.motorTorque = 0.00001f;
+                    if(axleInfo.leftWheel != null && axleInfo.leftWheel.motorTorque != 0.00001f)
+                        axleInfo.leftWheel.motorTorque = 0.00001f;
+                        
+                    if(axleInfo.rightWheel != null && axleInfo.rightWheel.motorTorque != 0.00001f)
+                        axleInfo.rightWheel.motorTorque = 0.00001f;
                 }
             }
 
