@@ -52,7 +52,12 @@ public class CarRadiator : FluidContainer
     public void SetPercent(float percent)
     {
         ParticleSystem.EmissionModule em = GetComponent<ParticleSystem>().emission;
-        em.rateOverTime = particleRate * percent;
+        
+        if(currentLevel > 0.0f)
+            em.rateOverTime = particleRate * percent;
+            
+        else
+            StopOverheating();
     }
     
     public void Overheat()

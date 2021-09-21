@@ -338,12 +338,17 @@ public class CarController : MonoBehaviour
             //Calculate engine temperature
             float maxTemp = 1000.0f;
             
-            if(transmission != null)
+            if(transmission != null && radiator != null)
                 maxTemp = radiator.GetMinTemperature() - (10 * (currentSpeed / transmission.topSpeeds[transmission.topSpeeds.Length - 1]));
             
             if(engineTemperature < maxTemp)
             {
-                engineTemperature += 0.2f * (engineRPM / engine.maxRPM) * (1 - engineLoad);
+                //Engine overheats faster if no radiator is present
+                if(radiator == null)
+                    engineTemperature += 5.0f * (engineRPM / engine.maxRPM) * (1 - engineLoad);
+                    
+                else
+                    engineTemperature += 0.2f * (engineRPM / engine.maxRPM) * (1 - engineLoad);
             }
             
             else
@@ -395,7 +400,7 @@ public class CarController : MonoBehaviour
             }
             
             //If engine is overheating, produce steam
-            if(engineTemperature > MAX_ENGINE_TEMP)
+            if(radiator != null && engineTemperature > MAX_ENGINE_TEMP)
             { 
                 radiator.Overheat();
             }
@@ -413,18 +418,18 @@ public class CarController : MonoBehaviour
             }
         }
         
-        if(engineTemperature > MAX_ENGINE_TEMP && engineRunning)
+        if(radiator != null && engineTemperature > MAX_ENGINE_TEMP && engineRunning)
         {
             radiator.SetPercent(Mathf.Clamp((engineTemperature - MAX_ENGINE_TEMP) / 10.0f, 0.0f, 1.0f));
         }
         
-        else if(engineTemperature > MIN_ENGINE_OVERHEAT)
+        else if(radiator != null && engineTemperature > MIN_ENGINE_OVERHEAT)
         {
             radiator.SetPercent(Mathf.Clamp((engineTemperature - MIN_ENGINE_OVERHEAT) / 40.0f, 0.0f, 1.0f));
         }
         
         //Stop producing steam after a while
-        if(engineTemperature < MIN_ENGINE_OVERHEAT)
+        if(radiator != null && engineTemperature < MIN_ENGINE_OVERHEAT)
         {
             radiator.StopOverheating();
         }
