@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -24,7 +25,8 @@ public class CarController : MonoBehaviour
     
     public Transform centerOfMass;
 
-    public List<AxleInfo> axleInfos; 
+    public List<AxleInfo> axleInfos;
+    public List<Transform> driveshaft;
     public float maxSteeringAngle;
     
     public float engineRPM = 0.0f;
@@ -46,7 +48,9 @@ public class CarController : MonoBehaviour
     public int currentGear = CarTransmission.NEUTRAL;
     
     private Vector3 forwardVector, prevPos, curPos, movement;
+    private Vector2 playerInput;
     private float prevSpeed = 0.0f;
+    private float steering = 0.0f;
     
     private bool lightsOn = false;
     private bool highbeamsOn = false;
@@ -183,75 +187,54 @@ public class CarController : MonoBehaviour
         return fuelCheck && engineCheck;
     }
     
-    public void Awake()
+    //Lights controls
+    public void OnLights()
     {
-        ApplyBrakes(1000.0f);
+        ToggleLights();
     }
     
-    public void Update()
+    //Driving controls
+    public void OnMove(InputValue input)
     {
-        //Lights stuff
-        if(Input.GetButtonUp("Lights"))
+        playerInput = input.Get<Vector2>();
+    }
+    
+    //Handbrake controls
+    public void OnHandbrake()
+    {
+        if(handbrakeOn)
         {
-            ToggleLights();
+            ApplyBrakes(0.0f);
+            handbrakeOn = false;
         }
-        
-        //Turn on the reverse lights if the player presses "reverse" and the car begins to move backwards
-        if(Input.GetAxis("Vertical") < 0 && movingBackward && !reverseLightsOn)
+
+        else
         {
-            reverseLightsOn = true;
-            
-            if(leftTaillight != null)
-                leftTaillight.ActivateSecondary();
-                
-            if(rightTaillight != null)
-                rightTaillight.ActivateSecondary();
-                
-            currentGear = CarTransmission.REVERSE;
+            ApplyBrakes(1000.0f);
+            handbrakeOn = true;
+            currentGear = CarTransmission.NEUTRAL;
         }
-        
-        //Turn off the reverse lights if the player presses "forwards"
-        else if(reverseLightsOn && Input.GetAxis("Vertical") > 0)
-        {
-            reverseLightsOn = false;
-            
-            if(leftTaillight != null)
-                leftTaillight.DeactivateSecondary();
-                
-            if(rightTaillight != null)
-                rightTaillight.DeactivateSecondary();
-                
-            currentGear = CarTransmission.FIRST;
-        }
-        
-        //Handbrake controls
-        if(Input.GetButtonUp("Handbrake"))
-        {
-            if(handbrakeOn)
-            {
-                ApplyBrakes(0.0f);
-                handbrakeOn = false;
-            }
-            
-            else
-            {
-                ApplyBrakes(1000.0f);
-                handbrakeOn = true;
-                currentGear = CarTransmission.NEUTRAL;
-            }
-        }
-        
-        if(!engineRunning && Input.GetButtonUp("Ignition") && CanEngineRun())
+    }
+    
+    //Ignition controls
+    public void OnIgnition()
+    {
+        if(!engineRunning && CanEngineRun())
         {
             engineRunning = true;
         }
         
-        else if(engineRunning && Input.GetButtonUp("Ignition"))
+        else if(engineRunning)
         {
             engineRunning = false;
             engineRPM = 0;
             currentGear = CarTransmission.NEUTRAL;
         }
+    }
+    
+    public void Awake()
+    {
+        ApplyBrakes(1000.0f);
     }
      
     public void FixedUpdate()
@@ -316,14 +299,42 @@ public class CarController : MonoBehaviour
         
         if(engineRunning)
         {
+            //Turn on the reverse lights if the player presses "reverse" and the car begins to move backwards
+            if(playerInput.y < 0 && movingBackward && !reverseLightsOn)
+            {
+                reverseLightsOn = true;
+
+                if(leftTaillight != null)
+                    leftTaillight.ActivateSecondary();
+
+                if(rightTaillight != null)
+                    rightTaillight.ActivateSecondary();
+
+                currentGear = CarTransmission.REVERSE;
+            }
+
+            //Turn off the reverse lights if the player presses "forwards"
+            else if(reverseLightsOn && playerInput.y > 0)
+            {
+                reverseLightsOn = false;
+
+                if(leftTaillight != null)
+                    leftTaillight.DeactivateSecondary();
+
+                if(rightTaillight != null)
+                    rightTaillight.DeactivateSecondary();
+
+                currentGear = CarTransmission.FIRST;
+            }
+            
             //Reverse/Forward Stuff
             if(!handbrakeOn)
             {
-                if(Input.GetAxis("Vertical") > 0.0f)
+                if(playerInput.y > 0.0f)
                 {
                     if(movingBackward)
                     {
-                        ApplyBrakes(1000.0f * Input.GetAxis("Vertical"));
+                        ApplyBrakes(1000.0f * playerInput.y);
                         
                         if(leftTaillight != null)
                             leftTaillight.ActivateTertiary();
@@ -344,11 +355,11 @@ public class CarController : MonoBehaviour
                     }
                 }
 
-                else if(Input.GetAxis("Vertical") < 0.0f)
+                else if(playerInput.y < 0.0f)
                 {
                     if(movingForward)
                     {
-                        ApplyBrakes(1000.0f * -Input.GetAxis("Vertical"));
+                        ApplyBrakes(1000.0f * -playerInput.y);
                         
                         if(leftTaillight != null)
                             leftTaillight.ActivateTertiary();
@@ -372,17 +383,18 @@ public class CarController : MonoBehaviour
                 }
             }
 
-            //Shifting out of neutral
-            if(transmission != null && currentGear == CarTransmission.NEUTRAL && Input.GetAxis("Vertical") != 0.0f)
+            //Automatic shifting out of neutral
+            if(transmission.isAuto && transmission != null && currentGear == CarTransmission.NEUTRAL && playerInput.y != 0.0f)
             {
-                if(Input.GetAxis("Vertical") > 0.0f)
+                if(playerInput.y > 0.0f)
                     currentGear = CarTransmission.FIRST;
 
                 else
                     currentGear = CarTransmission.REVERSE;
             }
 
-            float targetRPM = (Input.GetAxis("Vertical") == 0.0f ? 1000.0f : engine.maxRPM * Mathf.Abs(Input.GetAxis("Vertical")));
+            //Target engine RPM, determined by throttle position
+            float targetRPM = (playerInput.y == 0.0f ? 1000.0f : engine.maxRPM * Mathf.Abs(playerInput.y));
 
             //Engine load coefficient. Currently just based on the x angle of the car
             engineLoad = 1 - Mathf.Min(30, (transform.eulerAngles.x > 180 ? 360 - transform.eulerAngles.x : transform.eulerAngles.x)) / 30;
@@ -396,7 +408,7 @@ public class CarController : MonoBehaviour
                     engineRPM += 5 * engineLoad;
             }
 
-            else if(Input.GetAxis("Vertical") == 0)
+            else if(playerInput.y == 0)
             {
                 engineRPM -= 65;
             }
@@ -423,23 +435,27 @@ public class CarController : MonoBehaviour
                 engineTemperature -= 0.1f;
             }
 
-            //Shift up
-            if(transmission != null && engineRPM > engine.peakRPM && currentGear < transmission.topGear && currentGear > CarTransmission.NEUTRAL && currentSpeed > transmission.topSpeeds[currentGear] * 0.8f && currentSpeed > prevSpeed)
+            //Automatic transmission
+            if(transmission.isAuto)
             {
-                engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear + 1]);
-                currentGear++;
-            }
+                //Shift up
+                if(transmission != null && engineRPM > engine.peakRPM && currentGear < transmission.topGear && currentGear > CarTransmission.NEUTRAL && currentSpeed > transmission.topSpeeds[currentGear] * 0.8f && currentSpeed > prevSpeed)
+                {
+                    engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear + 1]);
+                    currentGear++;
+                }
 
-            //Shift down
-            if(transmission != null && currentGear > CarTransmission.FIRST && currentSpeed < transmission.topSpeeds[currentGear] * 0.6f && currentSpeed < prevSpeed)
-            {
-                engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear]);
-                currentGear--;
-            }
+                //Shift down
+                if(transmission != null && currentGear > CarTransmission.FIRST && currentSpeed < transmission.topSpeeds[currentGear] * 0.6f && currentSpeed < prevSpeed)
+                {
+                    engineRPM = engineRPM * (currentSpeed / transmission.topSpeeds[currentGear]);
+                    currentGear--;
+                }
 
-            //Reverse
-            if(currentGear == CarTransmission.FIRST && movingForward && Input.GetAxis("Vertical") < 0.0f)
-                currentGear = CarTransmission.REVERSE;
+                //Reverse
+                if(currentGear == CarTransmission.FIRST && movingForward && playerInput.y < 0.0f)
+                    currentGear = CarTransmission.REVERSE;
+            }
                 
             //Engine RPM affected by overheating
             trueEngineRPM = engineRPM * Mathf.Clamp(1.0f - ((engineTemperature - MAX_ENGINE_TEMP) / 10.0f), 0.0f, 1.0f);
@@ -449,7 +465,6 @@ public class CarController : MonoBehaviour
             {
                 engineRunning = false;
                 engineRPM = 0.0f;
-                Debug.Log("Engine overheated too much");
             }
 
             engineTorque = engine.GetTorque(trueEngineRPM);
@@ -500,8 +515,29 @@ public class CarController : MonoBehaviour
         {
             radiator.StopOverheating();
         }
-
-        float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
+        
+        //Smooth steering
+        float targetDirection = maxSteeringAngle * playerInput.x;
+        
+        if(playerInput.x > 0.0f && steering < targetDirection)
+        {
+            steering += 1.0f;
+        }
+        
+        else if(playerInput.x < 0.0f && steering > targetDirection)
+        {
+            steering -= 1.0f;
+        }
+        
+        else if(steering > targetDirection)
+        {
+            steering -= 1.0f;
+        }
+        
+        else if(steering < targetDirection)
+        {
+            steering += 1.0f;
+        }
 
         //Apply forces to the wheels
         foreach (AxleInfo axleInfo in axleInfos) 

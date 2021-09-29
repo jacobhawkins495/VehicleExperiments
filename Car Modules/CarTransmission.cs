@@ -11,6 +11,8 @@ public class CarTransmission : MonoBehaviour
     
     public int topGear;
     
+    public bool isAuto = true;
+    
     public const int REVERSE = 0;
     public const int NEUTRAL = 1;
     public const int FIRST = 2;

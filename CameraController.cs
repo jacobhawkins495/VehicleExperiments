@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 
 /*
@@ -19,9 +20,21 @@ public class CameraController : MonoBehaviour {
     public float distanceMax = 15f;
  
     private Rigidbody rigidbod;
+    
+    private Vector2 movement;
  
     float x = 0.0f;
     float y = 0.0f;
+    
+    public void OnLook(InputValue input)
+    {
+        movement = input.Get<Vector2>();
+    }
+    
+    public void OnScrollWheel(InputValue input)
+    {
+        distance = Mathf.Clamp(distance - input.Get<Vector2>().y, distanceMin, distanceMax);
+    }
  
     // Use this for initialization
     void Start () 
@@ -43,14 +56,12 @@ public class CameraController : MonoBehaviour {
     {
         if (target) 
         {
-            x += Input.GetAxis("Mouse X") * xSpeed * distance * 0.02f;
-            y -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
+            x += movement.x * xSpeed * distance * 0.02f;
+            y -= movement.y * ySpeed * 0.02f;
  
             y = ClampAngle(y, yMinLimit, yMaxLimit);
  
             Quaternion rotation = Quaternion.Euler(y, x, 0);
- 
-            distance = Mathf.Clamp(distance - Input.GetAxis("Mouse ScrollWheel")*5, distanceMin, distanceMax);
 
             Vector3 negDistance = new Vector3(0.0f, 0.0f, -distance);
             Vector3 position = rotation * negDistance + target.position;
