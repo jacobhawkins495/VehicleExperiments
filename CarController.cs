@@ -564,11 +564,14 @@ public class CarController : MonoBehaviour
             {
                 if(currentGear != CarTransmission.NEUTRAL)
                 {
+                    float leftDiff = axleInfo.rightWheel.isGrounded ? 0.5f : 0.00001f;
+                    float rightDiff = axleInfo.leftWheel.isGrounded ? 0.5f : 0.00001f;
+                    
                     if(axleInfo.leftWheel != null)
-                        axleInfo.leftWheel.motorTorque = gearboxTorque / 2.0f;
+                        axleInfo.leftWheel.motorTorque = gearboxTorque * leftDiff;
                         
                     if(axleInfo.rightWheel != null)
-                        axleInfo.rightWheel.motorTorque = gearboxTorque / 2.0f;
+                        axleInfo.rightWheel.motorTorque = gearboxTorque * rightDiff;
                 }
 
                 else if(currentGear == CarTransmission.NEUTRAL)
