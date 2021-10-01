@@ -564,6 +564,7 @@ public class CarController : MonoBehaviour
             {
                 if(currentGear != CarTransmission.NEUTRAL)
                 {
+                    //Basic differential. If one wheel is in the air, give it all the torque
                     float leftDiff = axleInfo.rightWheel.isGrounded ? 0.5f : 0.00001f;
                     float rightDiff = axleInfo.leftWheel.isGrounded ? 0.5f : 0.00001f;
                     

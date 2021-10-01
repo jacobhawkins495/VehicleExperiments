@@ -20,7 +20,7 @@ public class CameraController : MonoBehaviour {
     public float distanceMin = .5f;
     public float distanceMax = 15f;
     
-    public bool isInCar = true;
+    public bool isInCar = false;
  
     private Rigidbody rigidbod;
     
@@ -89,7 +89,7 @@ public class CameraController : MonoBehaviour {
                 transform.position = position;
             }
             
-            else
+            else if(isInCar) 
             {
                 transform.position = transform.parent.GetComponent<CarController>().driverCameraLocation.position;
                 transform.localRotation = rotation;
