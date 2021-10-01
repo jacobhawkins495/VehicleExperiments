@@ -12,6 +12,7 @@ public class CameraController : MonoBehaviour {
     public float distance = 5.0f;
     public float xSpeed = 120.0f;
     public float ySpeed = 120.0f;
+    public float zoomSpeed = 1.0f;
  
     public float yMinLimit = -20f;
     public float yMaxLimit = 80f;
@@ -23,17 +24,19 @@ public class CameraController : MonoBehaviour {
     
     private Vector2 movement;
  
-    float x = 0.0f;
-    float y = 0.0f;
+    private float x = 0.0f;
+    private float y = 0.0f;
+    
+    private float scroll;
     
     public void OnLook(InputValue input)
     {
         movement = input.Get<Vector2>();
     }
     
-    public void OnScrollWheel(InputValue input)
+    public void OnThirdPersonZoom(InputValue input)
     {
-        distance = Mathf.Clamp(distance - input.Get<Vector2>().y, distanceMin, distanceMax);
+        scroll = -input.Get<float>() * zoomSpeed;
     }
  
     // Use this for initialization
@@ -56,7 +59,9 @@ public class CameraController : MonoBehaviour {
     {
         if (target) 
         {
-            x += movement.x * xSpeed * distance * 0.02f;
+            distance = Mathf.Clamp(distance - scroll, distanceMin, distanceMax);
+            
+            x += movement.x * xSpeed * 0.02f;
             y -= movement.y * ySpeed * 0.02f;
  
             y = ClampAngle(y, yMinLimit, yMaxLimit);
