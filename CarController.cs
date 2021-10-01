@@ -481,6 +481,14 @@ public class CarController : MonoBehaviour
                 gearboxTorque = transmission.gearRatios[currentGear] * engineTorqueNM * engineLoad * transmissionSpeedCoefficient;
             }
             
+            if(currentGear != CarTransmission.NEUTRAL)
+            {
+                foreach(Transform segment in driveshaft)
+                {
+                    segment.Rotate(0.0f, 0.0f, 100.0f * (trueEngineRPM / engine.maxRPM));
+                }
+            }
+            
             //If engine is overheating, produce steam
             if(radiator != null && engineTemperature > MAX_ENGINE_TEMP)
             { 
