@@ -24,6 +24,7 @@ public class CarController : MonoBehaviour
     public CarOdometer odometer;
     
     public Transform centerOfMass;
+    public Transform driverCameraLocation;
 
     public List<AxleInfo> axleInfos;
     public List<Transform> driveshaft;

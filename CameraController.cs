@@ -19,6 +19,8 @@ public class CameraController : MonoBehaviour {
  
     public float distanceMin = .5f;
     public float distanceMax = 15f;
+    
+    public bool isInCar = true;
  
     private Rigidbody rigidbod;
     
@@ -29,6 +31,8 @@ public class CameraController : MonoBehaviour {
     
     private float scroll;
     
+    private bool orbit = false;
+    
     public void OnLook(InputValue input)
     {
         movement = input.Get<Vector2>();
@@ -37,6 +41,11 @@ public class CameraController : MonoBehaviour {
     public void OnThirdPersonZoom(InputValue input)
     {
         scroll = -input.Get<float>() * zoomSpeed;
+    }
+    
+    public void OnChangeCamera()
+    {
+        orbit = !orbit;
     }
  
     // Use this for initialization
@@ -53,6 +62,9 @@ public class CameraController : MonoBehaviour {
         {
             rigidbod.freezeRotation = true;
         }
+        
+        if(isInCar)
+            transform.position = transform.parent.GetComponent<CarController>().driverCameraLocation.position;
     }
  
     void LateUpdate () 
@@ -71,8 +83,17 @@ public class CameraController : MonoBehaviour {
             Vector3 negDistance = new Vector3(0.0f, 0.0f, -distance);
             Vector3 position = rotation * negDistance + target.position;
  
-            transform.rotation = rotation;
-            transform.position = position;
+            if(orbit)
+            {
+                transform.rotation = rotation;
+                transform.position = position;
+            }
+            
+            else
+            {
+                transform.position = transform.parent.GetComponent<CarController>().driverCameraLocation.position;
+                transform.localRotation = rotation;
+            }
         }
     }
  
